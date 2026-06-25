@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files — contain DB credentials
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+
+# Test artefacts
+server/tests/tmp/
+coverage/
+.nyc_output/
+
+# Queue runtime files
+server/queue/pending/
+server/queue/processed/
+server/queue/failed/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.user

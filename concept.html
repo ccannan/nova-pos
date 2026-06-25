@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaPOS</title>
+<style>
+/* ─── Reset & root ──────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+body{background:#0D1117;color:#E6EDF3;overflow:hidden}
+input,select,button,textarea{font-family:inherit}
+button{cursor:pointer}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px}
+input:focus,select:focus,textarea:focus{outline:none}
+
+/* ─── Variables ─────────────────────────────────────────── */
+:root{
+  --gold:#D4A843;--gold-dim:#A08840;
+  --gold-bg:rgba(212,168,67,0.09);--gold-border:rgba(212,168,67,0.22);
+  --bg:#0D1117;--sidebar:#090C11;--card:#161B22;--card2:#1C2128;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#E6EDF3;--text2:#8B949E;--muted:#484F58;
+  --ok:#3FB950;--ok-bg:rgba(63,185,80,0.09);--ok-bd:rgba(63,185,80,0.28);
+  --err:#F85149;--err-bg:rgba(248,81,73,0.09);--err-bd:rgba(248,81,73,0.22);
+  --warn:#E3B341;
+  --sw:224px;--swc:60px;--st:0.22s ease;
+}
+
+/* ─── App shell ─────────────────────────────────────────── */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ─── Sidebar ───────────────────────────────────────────── */
+.sidebar{
+  width:var(--sw);background:var(--sidebar);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;
+  transition:width var(--st);overflow:hidden;
+}
+.sidebar.col{width:var(--swc)}
+
+.sb-top{
+  display:flex;align-items:center;height:58px;
+  padding:0 14px;border-bottom:1px solid var(--border);
+  flex-shrink:0;gap:10px;
+}
+.brand-mark{color:var(--gold);font-size:18px;flex-shrink:0;width:32px;text-align:center;line-height:1}
+.brand-text{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-0.3px;white-space:nowrap;transition:opacity var(--st)}
+.sidebar.col .brand-text{opacity:0;pointer-events:none}
+.toggle-btn{
+  margin-left:auto;width:28px;height:28px;border-radius:6px;
+  background:transparent;border:none;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:color .15s,background .15s;
+}
+.toggle-btn:hover{background:var(--card);color:var(--text2)}
+.sidebar.col .toggle-btn{margin-left:0}
+
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+
+.nav-sep{
+  height:1px;background:var(--border);
+  margin:6px 8px;flex-shrink:0;
+}
+
+.nav-btn{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border-radius:8px;color:var(--text2);cursor:pointer;
+  border:none;background:transparent;text-align:left;width:100%;
+  position:relative;transition:background .15s,color .15s;
+  white-space:nowrap;
+}
+.nav-btn:hover{background:var(--card);color:var(--text)}
+.nav-btn.active{background:var(--gold-bg);color:var(--gold)}
+.nav-btn.active::before{
+  content:'';position:absolute;left:0;top:7px;bottom:7px;
+  width:3px;background:var(--gold);border-radius:2px;
+}
+.nav-icon{
+  width:32px;height:32px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;
+}
+.nav-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.nav-label{font-size:13px;font-weight:500;white-space:nowrap;transition:opacity var(--st)}
+.sidebar.col .nav-label{opacity:0;pointer-events:none}
+
+/* Tooltip when collapsed */
+.sidebar.col .nav-btn::after{
+  content:attr(data-tip);position:absolute;
+  left:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:6px;padding:5px 10px;font-size:12px;
+  color:var(--text);white-space:nowrap;pointer-events:none;
+  z-index:999;opacity:0;transition:opacity .15s;
+}
+.sidebar.col .nav-btn:hover::after{opacity:1}
+
+.sb-foot{
+  padding:12px 14px;border-top:1px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;gap:8px;
+}
+.store-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex-shrink:0}
+.store-name{font-size:11px;color:var(--muted);white-space:nowrap;transition:opacity var(--st)}
+.sidebar.col .store-name{opacity:0}
+
+/* ─── Main ──────────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.page{flex:1;display:none;flex-direction:column;overflow:hidden}
+.page.active{display:flex}
+
+/* ─── Shared toolbar/header ─────────────────────────────── */
+.toolbar{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 20px;border-bottom:1px solid var(--border);
+  flex-shrink:0;background:var(--bg);
+}
+.toolbar-title{font-size:15px;font-weight:600;color:var(--text)}
+.toolbar-sub{font-size:12px;color:var(--muted)}
+.flex1{flex:1}
+
+/* ─── Buttons ───────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:7px;font-size:13px;
+  font-weight:500;border:none;cursor:pointer;
+  transition:filter .15s,background .15s;white-space:nowrap;
+}
+.btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn:hover{filter:brightness(1.1)}
+.btn-gold{background:var(--gold);color:#0D1117}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--card);border-color:var(--border2);color:var(--text);filter:none}
+.btn-icon{padding:0;width:30px;height:30px;justify-content:center}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-danger-ghost{background:var(--err-bg);color:var(--err);border:1px solid var(--err-bd)}
+
+/* ─── Search ────────────────────────────────────────────── */
+.search-wrap{position:relative}
+.search-wrap svg.si{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;stroke:var(--muted);fill:none;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;
+}
+.search-input{
+  width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:7px;padding:8px 11px 8px 34px;color:var(--text);
+  font-size:13px;transition:border-color .15s;
+}
+.search-input:focus{border-color:var(--gold-border)}
+.search-input::placeholder{color:var(--muted)}
+
+/* ─── Table ─────────────────────────────────────────────── */
+.tbl-wrap{flex:1;overflow:auto;padding:0 20px 20px}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+thead th{
+  text-align:left;font-size:10px;font-weight:600;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+  padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:var(--card)}
+tbody td{padding:11px 12px;font-size:13px;color:var(--text)}
+.td2{color:var(--text2)}
+.td-act{display:flex;gap:6px;align-items:center}
+
+/* ─── Badge ─────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)}
+.badge-gold{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)}
+.badge-muted{background:rgba(139,148,158,.1);color:var(--text2);border:1px solid rgba(139,148,158,.2)}
+.badge-err{background:var(--err-bg);color:var(--err);border:1px solid var(--err-bd)}
+.badge-warn{background:rgba(227,179,65,.1);color:var(--warn);border:1px solid rgba(227,179,65,.25)}
+
+/* ─── POS page ──────────────────────────────────────────── */
+.pos-body{flex:1;display:flex;overflow:hidden}
+
+/* Left column */
+.pos-left{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:14px 16px;gap:10px;min-width:0}
+
+/* Customer row */
+.pos-cust{
+  display:flex;align-items:center;gap:9px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;cursor:pointer;
+  transition:border-color .15s;flex-shrink:0;
+}
+.pos-cust:hover{border-color:var(--border2)}
+.cust-av{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--gold-bg);border:1px solid var(--gold-border);
+  color:var(--gold);display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;flex-shrink:0;
+}
+.cust-av.walk{background:var(--card2);border-color:var(--border);color:var(--muted)}
+.cust-av svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.cust-name{font-size:13px;font-weight:500;color:var(--text)}
+.cust-phone{font-size:11px;color:var(--muted)}
+.cust-chev{margin-left:auto;color:var(--muted)}
+.cust-chev svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.pos-sale-meta{margin-left:auto;text-align:right;flex-shrink:0}
+.pos-sale-num{font-size:12px;font-weight:600;color:var(--gold);letter-spacing:-.2px}
+.pos-sale-date{font-size:10px;color:var(--muted);margin-top:1px}
+
+/* POS item search */
+.pos-search-wrap{position:relative;z-index:50;flex-shrink:0}
+.pos-si{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
+.pos-si svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pos-search{
+  width:100%;background:var(--card);
+  border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 12px 10px 38px;color:var(--text);font-size:13px;
+  transition:border-color .15s,border-radius .1s;
+}
+.pos-search:focus{border-color:var(--gold-border)}
+.pos-search.open{border-radius:8px 8px 0 0;border-color:rgba(212,168,67,.4)}
+
+.item-dropdown{
+  display:none;position:absolute;top:100%;left:0;right:0;
+  background:var(--card);border:1.5px solid rgba(212,168,67,.35);
+  border-top:none;border-radius:0 0 8px 8px;
+  overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,.5);z-index:51;
+}
+.item-dropdown.open{display:block}
+.item-row{
+  display:flex;align-items:center;gap:11px;padding:10px 14px;
+  cursor:pointer;border-bottom:1px solid var(--border);
+  transition:background .1s;
+}
+.item-row:last-child{border-bottom:none}
+.item-row:hover{background:var(--card2)}
+.item-ico{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--gold-bg);border:1px solid var(--gold-border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--gold);flex-shrink:0;
+}
+.item-ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.item-name{font-size:13px;font-weight:500;color:var(--text)}
+.item-meta{font-size:10px;color:var(--muted);margin-top:1px}
+.item-price{margin-left:auto;font-size:13px;font-weight:600;color:var(--gold);flex-shrink:0;padding-left:10px}
+.item-avail{font-size:10px;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.no-results{padding:14px;text-align:center;color:var(--muted);font-size:12px}
+
+/* Sale lines */
+.lines-hdr{
+  display:grid;grid-template-columns:22px 1fr 104px 104px 32px;
+  gap:8px;padding:0 12px;font-size:10px;font-weight:600;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;
+}
+.lines-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+
+.sale-line{
+  display:grid;grid-template-columns:22px 1fr 104px 104px 32px;
+  gap:8px;align-items:center;background:var(--card);
+  border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+  animation:slIn .14s ease;
+}
+@keyframes slIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.sl-num{font-size:11px;color:var(--muted)}
+.sl-desc{font-size:13px;font-weight:500;color:var(--text)}
+.sl-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.sl-price{text-align:right;font-size:13px;color:var(--gold-dim)}
+.sl-total{text-align:right;font-size:13px;font-weight:600;color:var(--text)}
+.sl-rm{
+  width:28px;height:28px;background:var(--err-bg);border:none;
+  border-radius:6px;color:var(--err);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;transition:background .15s;
+}
+.sl-rm:hover{background:rgba(248,81,73,.18)}
+.sl-rm svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+
+.lines-empty{
+  border:1.5px dashed var(--border2);border-radius:8px;
+  padding:30px 16px;text-align:center;color:var(--muted);font-size:12px;
+}
+.lines-empty svg{
+  width:26px;height:26px;stroke:var(--border2);fill:none;
+  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
+  display:block;margin:0 auto 8px;
+}
+
+/* Right panel */
+.pos-right{
+  width:292px;flex-shrink:0;background:#090C11;
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;padding:16px;gap:0;
+}
+
+.pos-totals{padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.tot-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.tot-lbl{font-size:12px;color:var(--muted)}
+.tot-val{font-size:12px;color:var(--text2)}
+.tot-grand-lbl{font-size:14px;font-weight:500;color:var(--text)}
+.tot-grand-val{font-size:30px;font-weight:700;color:var(--gold);letter-spacing:-1px}
+
+/* Tender method */
+.tender-methods{display:flex;gap:4px;margin-bottom:10px}
+.tender-tab{
+  flex:1;padding:6px 4px;background:var(--card);
+  border:1px solid var(--border);border-radius:6px;
+  color:var(--text2);font-size:11px;font-weight:500;
+  text-align:center;cursor:pointer;transition:all .15s;
+}
+.tender-tab:hover{border-color:var(--border2);color:var(--text)}
+.tender-tab.active{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold)}
+
+.tender-section{flex:1;margin-bottom:14px}
+.tender-lbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:8px}
+.tender-wrap{position:relative;margin-bottom:10px}
+.tender-cur{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:15px;font-weight:500}
+.tender-input{
+  width:100%;background:var(--card);border:1.5px solid var(--border);
+  border-radius:8px;padding:10px 12px 10px 28px;color:var(--text);
+  font-size:24px;font-weight:700;text-align:right;letter-spacing:-.5px;
+  transition:border-color .15s;
+}
+.tender-input:focus{border-color:rgba(212,168,67,.4)}
+
+.change-box{
+  background:var(--ok-bg);border:1px solid var(--ok-bd);
+  border-radius:8px;padding:12px 14px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.change-box.empty{background:var(--card);border-color:var(--border)}
+.change-lbl{font-size:12px;color:var(--muted)}
+.change-val{font-size:24px;font-weight:700;color:var(--ok);letter-spacing:-1px}
+.change-val.empty{font-size:14px;font-weight:400;color:var(--muted)}
+
+.pos-actions{display:flex;flex-direction:column;gap:8px}
+.btn-complete{
+  width:100%;background:var(--gold);color:#0D1117;border:none;
+  border-radius:8px;padding:13px 16px;font-size:14px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  cursor:pointer;transition:filter .15s;
+}
+.btn-complete:hover{filter:brightness(1.08)}
+.btn-complete:disabled{opacity:.3;cursor:not-allowed;filter:none}
+.btn-complete svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-new{
+  width:100%;background:transparent;color:var(--muted);
+  border:1px solid var(--border);border-radius:8px;padding:9px;
+  font-size:12px;font-weight:500;cursor:pointer;
+  transition:all .15s;
+}
+.btn-new:hover{background:var(--card);color:var(--text2);border-color:var(--border2)}
+
+/* Quick tender buttons */
+.quick-tender{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.qt-btn{
+  flex:1;min-width:calc(33% - 4px);padding:6px 4px;background:var(--card2);
+  border:1px solid var(--border);border-radius:6px;color:var(--text2);
+  font-size:11px;font-weight:500;text-align:center;cursor:pointer;
+  transition:all .15s;
+}
+.qt-btn:hover{background:var(--card);border-color:var(--border2);color:var(--text)}
+
+/* ─── CRUD pages ─────────────────────────────────────────── */
+.page-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ─── Drawer ─────────────────────────────────────────────── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.55);z-index:100;
+}
+.overlay.open{display:block}
+
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:440px;
+  background:#111519;border-left:1px solid var(--border);
+  z-index:101;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .24s ease;
+  box-shadow:-14px 0 48px rgba(0,0,0,.55);
+}
+.drawer.open{transform:translateX(0)}
+
+.dr-head{
+  display:flex;align-items:center;padding:16px 20px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.dr-title{font-size:15px;font-weight:600;color:var(--text)}
+.dr-close{
+  margin-left:auto;width:30px;height:30px;border-radius:6px;
+  background:transparent;border:none;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.dr-close:hover{background:var(--card);color:var(--text)}
+.dr-close svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+
+.dr-body{flex:1;overflow-y:auto;padding:20px}
+.dr-foot{
+  padding:14px 20px;border-top:1px solid var(--border);
+  display:flex;gap:10px;flex-shrink:0;
+}
+
+/* Forms */
+.fg{margin-bottom:16px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+label.fl{
+  display:block;font-size:11px;font-weight:600;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;
+}
+.fi,.fs{
+  width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:7px;padding:9px 12px;color:var(--text);font-size:13px;
+  transition:border-color .15s;
+}
+.fi:focus,.fs:focus{border-color:var(--gold-border)}
+.fi::placeholder{color:var(--muted)}
+.fs{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23484F58' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;-webkit-appearance:none}
+.fsec{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px;margin-top:20px;display:block}
+
+/* ─── Customer picker modal ──────────────────────────────── */
+.modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.7);z-index:200;
+  align-items:center;justify-content:center;
+}
+.modal.open{display:flex}
+.modal-panel{
+  background:#111519;border:1px solid var(--border2);border-radius:12px;
+  width:420px;max-height:60vh;display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden;
+}
+.modal-head{padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px}
+.modal-list{overflow-y:auto;padding:8px}
+.cust-opt{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;
+  border-radius:8px;cursor:pointer;transition:background .1s;
+}
+.cust-opt:hover{background:var(--card)}
+.co-av{
+  width:34px;height:34px;border-radius:50%;background:var(--card);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;
+}
+.co-av.walk{color:var(--muted)}
+.co-av svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.co-name{font-size:13px;font-weight:500;color:var(--text)}
+.co-phone{font-size:11px;color:var(--muted)}
+.modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px}
+
+/* ─── Toast ──────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--ok-bg);border:1px solid var(--ok-bd);
+  border-radius:10px;padding:14px 18px;
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;color:var(--ok);font-weight:500;
+  z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.4);
+  transform:translateY(70px);opacity:0;
+  transition:transform .3s ease,opacity .3s ease;pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* ─── Empty state ────────────────────────────────────────── */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;color:var(--muted);gap:10px;padding:40px;
+}
+.empty-state svg{width:40px;height:40px;stroke:var(--border2);fill:none;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
+.empty-state p{font-size:13px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- ═══════════════════════════════════════ SIDEBAR ═══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <span class="brand-mark">◆</span>
+    <span class="brand-text">NovaPOS</span>
+    <button class="toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+      <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+
+  <nav class="sb-nav">
+    <button class="nav-btn active" data-tip="POS" onclick="nav('pos')">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h.01M12 8h.01M17 8h.01M7 12h.01M12 12h.01M17 12h.01"/></svg></span>
+      <span class="nav-label">Point of Sale</span>
+    </button>
+
+    <div class="nav-sep"></div>
+
+    <button class="nav-btn" data-tip="Customers" onclick="nav('customers')">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></span>
+      <span class="nav-label">Customers</span>
+    </button>
+
+    <button class="nav-btn" data-tip="Items" onclick="nav('items')">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 3l6 2 6-2 3 7-9 11L3 10l3-7z"/><path d="M6 3l6 8 6-8"/><path d="M3 10h18"/></svg></span>
+      <span class="nav-label">Items</span>
+    </button>
+
+    <button class="nav-btn" data-tip="Inventory" onclick="nav('inventory')">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
+      <span class="nav-label">Inventory</span>
+    </button>
+
+    <button class="nav-btn" data-tip="Suppliers" onclick="nav('suppliers')">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-5 7 5v13"/><path d="M9 21v-8h6v8M9 10h.01M15 10h.01M9 13h.01M15 13h.01"/></svg></span>
+      <span class="nav-label">Suppliers</span>
+    </button>
+  </nav>
+
+  <div class="sb-foot">
+    <span class="store-dot"></span>
+    <span class="store-name">City Store</span>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════ MAIN ══════ -->
+<main class="main">
+
+<!-- ── POS ──────────────────────────────────────────────── -->
+<div class="page active" id="page-pos">
+  <div class="pos-body">
+    <div class="pos-left">
+      <!-- Customer + sale meta row -->
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+        <div class="pos-cust" id="cust-pill" onclick="openCustModal()" style="flex:1">
+          <div class="cust-av walk" id="cust-av">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div class="cust-name" id="cust-name">Walk-in customer</div>
+            <div class="cust-phone" id="cust-phone">Select or search for a customer</div>
+          </div>
+          <div class="pos-sale-meta">
+            <div class="pos-sale-num" id="sale-num">Sale #0048</div>
+            <div class="pos-sale-date" id="sale-date"></div>
+          </div>
+          <div class="cust-chev"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Item search -->
+      <div class="pos-search-wrap">
+        <div class="pos-si"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></div>
+        <input class="pos-search" id="pos-search" type="text"
+          placeholder="Search by description or design no. (or scan barcode)…"
+          oninput="searchItems(this.value)" onfocus="if(this.value)searchItems(this.value)"
+          autocomplete="off">
+        <div class="item-dropdown" id="item-dd"></div>
+      </div>
+
+      <!-- Lines header -->
+      <div class="lines-hdr">
+        <span>#</span><span>Description</span>
+        <span style="text-align:right">Unit Price</span>
+        <span style="text-align:right">Total</span>
+        <span></span>
+      </div>
+
+      <!-- Sale lines -->
+      <div class="lines-list" id="lines-list">
+        <div class="lines-empty" id="lines-empty">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          Search above or scan a barcode to add items to this sale
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="pos-right">
+      <!-- Totals -->
+      <div class="pos-totals">
+        <div class="tot-row"><span class="tot-lbl">Subtotal</span><span class="tot-val" id="r-sub">$0.00</span></div>
+        <div class="tot-row"><span class="tot-lbl">Discount</span><span class="tot-val" style="color:var(--muted)">—</span></div>
+        <div class="tot-row" style="margin-bottom:0">
+          <span class="tot-grand-lbl">Total</span>
+          <span class="tot-grand-val" id="r-total">$0.00</span>
+        </div>
+      </div>
+
+      <!-- Tender method -->
+      <div class="tender-methods">
+        <button class="tender-tab active" onclick="setTender('Cash')">Cash</button>
+        <button class="tender-tab" onclick="setTender('Card')">Card</button>
+        <button class="tender-tab" onclick="setTender('Voucher')">Voucher</button>
+        <button class="tender-tab" onclick="setTender('Layby')">Layby</button>
+      </div>
+
+      <div class="tender-section">
+        <label class="tender-lbl" id="tender-lbl">Cash tendered</label>
+
+        <!-- Quick amounts (cash only) -->
+        <div class="quick-tender" id="quick-tender">
+          <button class="qt-btn" onclick="setQuick('exact')">Exact</button>
+          <button class="qt-btn" onclick="setQuick(50)">$50</button>
+          <button class="qt-btn" onclick="setQuick(100)">$100</button>
+          <button class="qt-btn" onclick="setQuick(200)">$200</button>
+          <button class="qt-btn" onclick="setQuick(500)">$500</button>
+          <button class="qt-btn" onclick="setQuick(1000)">$1k</button>
+        </div>
+
+        <div class="tender-wrap">
+          <span class="tender-cur">$</span>
+          <input class="tender-input" id="tender-amt" type="number" min="0" step="0.01"
+            placeholder="0.00" oninput="calcChange()">
+        </div>
+
+        <div class="change-box empty" id="change-box">
+          <span class="change-lbl">Change due</span>
+          <span class="change-val empty" id="change-val">—</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="pos-actions">
+        <button class="btn-complete" id="btn-complete" onclick="completeSale()" disabled>
+          <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+          Complete Sale
+        </button>
+        <button class="btn-new" onclick="newSale()">New Sale</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /pos -->
+
+
+<!-- ── Customers ─────────────────────────────────────────── -->
+<div class="page" id="page-customers">
+  <div class="toolbar">
+    <span class="toolbar-title">Customers</span>
+    <span class="toolbar-sub" id="cust-count"></span>
+    <div class="flex1"></div>
+    <div class="search-wrap" style="width:240px">
+      <svg class="si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" type="text" placeholder="Search customers…" oninput="filterTable('cust',this.value)">
+    </div>
+    <button class="btn btn-gold" onclick="openDrawer('customer',null)">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add Customer
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table id="tbl-cust">
+      <thead><tr>
+        <th>Name</th><th>Phone</th><th>Email</th><th>Notes</th><th style="width:80px"></th>
+      </tr></thead>
+      <tbody id="tbody-cust"></tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ── Items ─────────────────────────────────────────────── -->
+<div class="page" id="page-items">
+  <div class="toolbar">
+    <span class="toolbar-title">Items (Master Catalogue)</span>
+    <div class="flex1"></div>
+    <div class="search-wrap" style="width:240px">
+      <svg class="si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" type="text" placeholder="Search items…" oninput="filterTable('item',this.value)">
+    </div>
+    <button class="btn btn-gold" onclick="openDrawer('item',null)">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add Item
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table id="tbl-item">
+      <thead><tr>
+        <th>Design No.</th><th>Description</th><th>Category</th><th>Supplier</th>
+        <th style="text-align:right">Retail</th><th style="text-align:right">Cost</th>
+        <th>Status</th><th style="width:80px"></th>
+      </tr></thead>
+      <tbody id="tbody-item"></tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ── Inventory ─────────────────────────────────────────── -->
+<div class="page" id="page-inventory">
+  <div class="toolbar">
+    <span class="toolbar-title">Inventory</span>
+    <div class="flex1"></div>
+    <select class="fs" style="width:140px;padding:7px 28px 7px 10px" onchange="filterInv()" id="inv-filter-status">
+      <option value="">All Statuses</option>
+      <option value="Active">Active</option>
+      <option value="Sold">Sold</option>
+      <option value="On Hold">On Hold</option>
+      <option value="Layby">Layby</option>
+    </select>
+    <div class="search-wrap" style="width:220px">
+      <svg class="si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" type="text" id="inv-search" placeholder="Search inventory…" oninput="filterInv()">
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table id="tbl-inv">
+      <thead><tr>
+        <th>Design No.</th><th>Description</th><th>Category</th>
+        <th>Store</th><th>Status</th><th>Acquired</th>
+        <th style="text-align:right">Price</th><th style="width:60px"></th>
+      </tr></thead>
+      <tbody id="tbody-inv"></tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ── Suppliers ─────────────────────────────────────────── -->
+<div class="page" id="page-suppliers">
+  <div class="toolbar">
+    <span class="toolbar-title">Suppliers</span>
+    <div class="flex1"></div>
+    <div class="search-wrap" style="width:220px">
+      <svg class="si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" type="text" placeholder="Search suppliers…" oninput="filterTable('sup',this.value)">
+    </div>
+    <button class="btn btn-gold" onclick="openDrawer('supplier',null)">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add Supplier
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table id="tbl-sup">
+      <thead><tr>
+        <th>Supplier Name</th><th>Contact</th><th>Email</th><th>Phone</th>
+        <th>Status</th><th style="width:80px"></th>
+      </tr></thead>
+      <tbody id="tbody-sup"></tbody>
+    </table>
+  </div>
+</div>
+
+</main><!-- /main -->
+</div><!-- /app -->
+
+
+<!-- ═══════════════════════════════════ CUSTOMER MODAL ═══ -->
+<div class="modal" id="cust-modal">
+  <div class="modal-panel">
+    <div class="modal-head">
+      <h3>Select Customer</h3>
+      <div class="search-wrap">
+        <svg class="si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input class="search-input" type="text" placeholder="Search by name or phone…" oninput="filterCustModal(this.value)">
+      </div>
+    </div>
+    <div class="modal-list" id="cust-modal-list"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost flex1" onclick="closeCustModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="nav('customers');closeCustModal()">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> New Customer
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ DRAWER ═══════════ -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dr-head">
+    <span class="dr-title" id="dr-title">Add</span>
+    <button class="dr-close" onclick="closeDrawer()">
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="dr-body" id="dr-body"></div>
+  <div class="dr-foot">
+    <button class="btn btn-ghost flex1" onclick="closeDrawer()">Cancel</button>
+    <button class="btn btn-gold" style="min-width:120px" onclick="saveDrawer()">Save</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ TOAST ════════════ -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+  <span id="toast-msg">Sale #0048 completed!</span>
+</div>
+
+
+<script>
+/* ───────────────────────────────────────────────
+   DATA
+─────────────────────────────────────────────── */
+const db = {
+  saleCounter: 48,
+  customers: [
+    {id:1,firstName:'Jane',lastName:'Smith',phone:'0412 000 001',email:'jane@example.com',notes:'VIP – prefers yellow gold',isDeleted:false},
+    {id:2,firstName:'Michael',lastName:'Johnson',phone:'0412 000 002',email:'michael@example.com',notes:'Anniversary purchase each March',isDeleted:false},
+    {id:3,firstName:'Sarah',lastName:'Williams',phone:'0412 000 003',email:'sarah@example.com',notes:'',isDeleted:false},
+    {id:4,firstName:'David',lastName:'Chen',phone:'0412 000 004',email:'david@example.com',notes:'Allergic to nickel',isDeleted:false},
+  ],
+  suppliers: [
+    {id:1,name:'Pandora Wholesale',contact:'Alex Chen',email:'orders@pandora-ws.local',phone:'02 9000 0001',isActive:true},
+    {id:2,name:'Tiffany & Co Wholesale',contact:'Brooke Taylor',email:'wholesale@tiffany-ws.local',phone:'02 9000 0002',isActive:true},
+    {id:3,name:'Cartier Distribution',contact:'Marie Dupont',email:'distrib@cartier-ws.local',phone:'02 9000 0003',isActive:false},
+  ],
+  items: [
+    {id:1,designNo:'PAN-001',description:'Diamond Solitaire Ring',category:'Rings',supplierId:1,retailPrice:1299,cost:650,isActive:true},
+    {id:2,designNo:'MAP-024',description:'Diamond Drop Earrings',category:'Earrings',supplierId:1,retailPrice:1299,cost:600,isActive:true},
+    {id:3,designNo:'TIF-089',description:'Diamond Halo Ring',category:'Rings',supplierId:2,retailPrice:2499,cost:1200,isActive:true},
+    {id:4,designNo:'CAR-112',description:'Diamond Eternity Band',category:'Rings',supplierId:3,retailPrice:3200,cost:1600,isActive:true},
+    {id:5,designNo:'PAN-203',description:'Pearl Strand Necklace',category:'Necklaces',supplierId:1,retailPrice:899,cost:380,isActive:true},
+    {id:6,designNo:'TIF-045',description:'Silver Charm Bracelet',category:'Bracelets',supplierId:2,retailPrice:549,cost:210,isActive:false},
+  ],
+  inventory: [
+    {id:1,itemId:1,designNo:'PAN-001',description:'Diamond Solitaire Ring',category:'Rings',retailPrice:1299,status:'Active',store:'City Store',acquired:'2026-01-15'},
+    {id:2,itemId:2,designNo:'MAP-024',description:'Diamond Drop Earrings',category:'Earrings',retailPrice:1299,status:'Active',store:'City Store',acquired:'2026-01-20'},
+    {id:3,itemId:3,designNo:'TIF-089',description:'Diamond Halo Ring',category:'Rings',retailPrice:2499,status:'Active',store:'City Store',acquired:'2026-02-10'},
+    {id:4,itemId:4,designNo:'CAR-112',description:'Diamond Eternity Band',category:'Rings',retailPrice:3200,status:'Sold',store:'City Store',acquired:'2025-11-05'},
+    {id:5,itemId:1,designNo:'PAN-001',description:'Diamond Solitaire Ring',category:'Rings',retailPrice:1299,status:'On Hold',store:'City Store',acquired:'2026-03-01'},
+    {id:6,itemId:2,designNo:'MAP-024',description:'Diamond Drop Earrings',category:'Earrings',retailPrice:1299,status:'Active',store:'Southside',acquired:'2026-04-12'},
+    {id:7,itemId:5,designNo:'PAN-203',description:'Pearl Strand Necklace',category:'Necklaces',retailPrice:899,status:'Active',store:'City Store',acquired:'2026-05-03'},
+    {id:8,itemId:6,designNo:'TIF-045',description:'Silver Charm Bracelet',category:'Bracelets',retailPrice:549,status:'Layby',store:'Southside',acquired:'2026-05-20'},
+  ],
+};
+
+/* ───────────────────────────────────────────────
+   STATE
+─────────────────────────────────────────────── */
+let sidebarCollapsed = false;
+let currentPage = 'pos';
+let currentTender = 'Cash';
+let saleLines = [];
+let saleCustomer = null; // null = walk-in
+let drawerEntity = null;
+let drawerRecord = null; // null = new
+
+/* ───────────────────────────────────────────────
+   INIT
+─────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  setSaleDate();
+  renderCustomersTable();
+  renderItemsTable();
+  renderInventoryTable();
+  renderSuppliersTable();
+  updateTotals();
+  document.addEventListener('click', e => {
+    const dd = document.getElementById('item-dd');
+    if (!document.getElementById('pos-search').contains(e.target) && !dd.contains(e.target)) {
+      closeItemDropdown();
+    }
+  });
+});
+
+function setSaleDate() {
+  const now = new Date();
+  const opts = {weekday:'short',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'};
+  document.getElementById('sale-date').textContent = now.toLocaleDateString('en-AU', opts);
+}
+
+/* ───────────────────────────────────────────────
+   SIDEBAR
+─────────────────────────────────────────────── */
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('col', sidebarCollapsed);
+}
+
+/* ───────────────────────────────────────────────
+   NAVIGATION
+─────────────────────────────────────────────── */
+function nav(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.nav-btn[onclick="nav('${page}')"]`).classList.add('active');
+}
+
+/* ───────────────────────────────────────────────
+   POS — ITEM SEARCH
+─────────────────────────────────────────────── */
+function searchItems(q) {
+  const dd = document.getElementById('item-dd');
+  const inp = document.getElementById('pos-search');
+  if (!q.trim()) { closeItemDropdown(); return; }
+
+  const results = db.inventory.filter(inv =>
+    inv.status === 'Active' &&
+    (inv.description.toLowerCase().includes(q.toLowerCase()) ||
+     inv.designNo.toLowerCase().includes(q.toLowerCase()))
+  );
+
+  if (results.length === 0) {
+    dd.innerHTML = `<div class="no-results">No active items match "${q}"</div>`;
+  } else {
+    dd.innerHTML = results.map(inv => `
+      <div class="item-row" onclick="addLine(${inv.id})">
+        <div class="item-ico">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3l6 2 6-2 3 7-9 11L3 10l3-7z"/><path d="M6 3l6 8 6-8"/><path d="M3 10h18"/>
+          </svg>
+        </div>
+        <div>
+          <div class="item-name">${inv.description}</div>
+          <div class="item-meta">${inv.designNo} · ${inv.category} · ${inv.store}</div>
+        </div>
+        <div class="item-price">$${fmt(inv.retailPrice)}</div>
+        <span class="badge badge-ok item-avail">Available</span>
+      </div>
+    `).join('');
+  }
+
+  dd.classList.add('open');
+  inp.classList.add('open');
+}
+
+function closeItemDropdown() {
+  document.getElementById('item-dd').classList.remove('open');
+  document.getElementById('pos-search').classList.remove('open');
+}
+
+/* ───────────────────────────────────────────────
+   POS — SALE LINES
+─────────────────────────────────────────────── */
+function addLine(invId) {
+  const inv = db.inventory.find(i => i.id === invId);
+  if (!inv) return;
+
+  // Mark as Sold in mock db
+  inv.status = 'Sold';
+
+  saleLines.push({
+    invId: invId,
+    description: inv.description,
+    designNo: inv.designNo,
+    category: inv.category,
+    unitPrice: inv.retailPrice,
+    discount: 0,
+  });
+
+  closeItemDropdown();
+  document.getElementById('pos-search').value = '';
+  renderSaleLines();
+  updateTotals();
+  renderInventoryTable();
+}
+
+function removeLine(idx) {
+  const line = saleLines[idx];
+  // Revert inventory status
+  const inv = db.inventory.find(i => i.id === line.invId);
+  if (inv) inv.status = 'Active';
+  saleLines.splice(idx, 1);
+  renderSaleLines();
+  updateTotals();
+  renderInventoryTable();
+}
+
+function renderSaleLines() {
+  const list = document.getElementById('lines-list');
+  const empty = document.getElementById('lines-empty');
+
+  if (saleLines.length === 0) {
+    list.innerHTML = '';
+    if (!document.getElementById('lines-empty')) {
+      const el = document.createElement('div');
+      el.className = 'lines-empty';
+      el.id = 'lines-empty';
+      el.innerHTML = `<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Search above or scan a barcode to add items to this sale`;
+      list.appendChild(el);
+    }
+    return;
+  }
+
+  list.innerHTML = saleLines.map((line, i) => `
+    <div class="sale-line">
+      <span class="sl-num">${i + 1}</span>
+      <div>
+        <div class="sl-desc">${line.description}</div>
+        <div class="sl-sub">${line.designNo} · ${line.category}</div>
+      </div>
+      <div class="sl-price">$${fmt(line.unitPrice)}</div>
+      <div class="sl-total">$${fmt(line.unitPrice - line.discount)}</div>
+      <button class="sl-rm" onclick="removeLine(${i})" title="Remove">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+/* ───────────────────────────────────────────────
+   POS — TOTALS & TENDER
+─────────────────────────────────────────────── */
+function getTotal() {
+  return saleLines.reduce((s, l) => s + (l.unitPrice - l.discount), 0);
+}
+
+function updateTotals() {
+  const t = getTotal();
+  document.getElementById('r-sub').textContent = '$' + fmt(t);
+  document.getElementById('r-total').textContent = '$' + fmt(t);
+  calcChange();
+  document.getElementById('btn-complete').disabled = (t === 0);
+}
+
+function setTender(method) {
+  currentTender = method;
+  document.querySelectorAll('.tender-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const qt = document.getElementById('quick-tender');
+  const lbl = document.getElementById('tender-lbl');
+  const amtInput = document.getElementById('tender-amt');
+
+  if (method === 'Cash') {
+    qt.style.display = 'flex';
+    lbl.textContent = 'Cash tendered';
+    amtInput.placeholder = '0.00';
+  } else if (method === 'Card') {
+    qt.style.display = 'none';
+    lbl.textContent = 'Card amount';
+    amtInput.value = fmt(getTotal());
+    amtInput.placeholder = '0.00';
+  } else if (method === 'Voucher') {
+    qt.style.display = 'none';
+    lbl.textContent = 'Voucher amount';
+    amtInput.placeholder = '0.00';
+  } else {
+    qt.style.display = 'none';
+    lbl.textContent = 'Deposit amount';
+    amtInput.placeholder = '0.00';
+  }
+  calcChange();
+}
+
+function setQuick(val) {
+  const t = getTotal();
+  const inp = document.getElementById('tender-amt');
+  if (val === 'exact') {
+    inp.value = t.toFixed(2);
+  } else {
+    const rounded = Math.ceil(t / val) * val;
+    inp.value = rounded.toFixed(2);
+  }
+  calcChange();
+}
+
+function calcChange() {
+  const t = getTotal();
+  const amt = parseFloat(document.getElementById('tender-amt').value) || 0;
+  const box = document.getElementById('change-box');
+  const val = document.getElementById('change-val');
+  const btn = document.getElementById('btn-complete');
+
+  if (currentTender !== 'Cash') {
+    const sufficient = amt >= t && t > 0;
+    box.className = sufficient ? 'change-box' : 'change-box empty';
+    box.style.background = sufficient ? 'var(--ok-bg)' : 'var(--card)';
+    box.style.borderColor = sufficient ? 'var(--ok-bd)' : 'var(--border)';
+    val.className = sufficient ? 'change-val' : 'change-val empty';
+    val.textContent = sufficient ? '✓ Ready' : '—';
+    val.style.fontSize = sufficient ? '18px' : '';
+    btn.disabled = !sufficient || t === 0;
+    return;
+  }
+
+  if (amt > 0 && t > 0) {
+    const change = amt - t;
+    if (change >= 0) {
+      box.className = 'change-box';
+      box.style.background = 'var(--ok-bg)';
+      box.style.borderColor = 'var(--ok-bd)';
+      val.className = 'change-val';
+      val.textContent = '$' + fmt(change);
+      val.style.fontSize = '';
+      btn.disabled = false;
+    } else {
+      box.className = 'change-box empty';
+      box.style.background = 'var(--err-bg)';
+      box.style.borderColor = 'var(--err-bd)';
+      val.className = 'change-val';
+      val.style.color = 'var(--err)';
+      val.textContent = '-$' + fmt(Math.abs(change));
+      val.style.fontSize = '';
+      btn.disabled = true;
+    }
+  } else {
+    box.className = 'change-box empty';
+    box.style.background = 'var(--card)';
+    box.style.borderColor = 'var(--border)';
+    val.className = 'change-val empty';
+    val.textContent = '—';
+    val.style.fontSize = '';
+    btn.disabled = t === 0;
+  }
+}
+
+/* ───────────────────────────────────────────────
+   POS — COMPLETE / NEW SALE
+─────────────────────────────────────────────── */
+function completeSale() {
+  const num = db.saleCounter;
+  db.saleCounter++;
+  saleLines = [];
+  saleCustomer = null;
+  renderSaleLines();
+  updateTotals();
+  updateCustPill();
+  document.getElementById('tender-amt').value = '';
+  document.getElementById('sale-num').textContent = 'Sale #' + String(db.saleCounter).padStart(4, '0');
+  calcChange();
+  showToast(`Sale #${String(num).padStart(4,'0')} completed successfully!`);
+  renderInventoryTable();
+}
+
+function newSale() {
+  // Revert any items
+  saleLines.forEach(l => {
+    const inv = db.inventory.find(i => i.id === l.invId);
+    if (inv) inv.status = 'Active';
+  });
+  saleLines = [];
+  saleCustomer = null;
+  document.getElementById('tender-amt').value = '';
+  document.getElementById('pos-search').value = '';
+  closeItemDropdown();
+  renderSaleLines();
+  updateTotals();
+  updateCustPill();
+  calcChange();
+  renderInventoryTable();
+}
+
+/* ───────────────────────────────────────────────
+   CUSTOMER MODAL
+─────────────────────────────────────────────── */
+function openCustModal() {
+  document.getElementById('cust-modal').classList.add('open');
+  renderCustModal('');
+}
+function closeCustModal() {
+  document.getElementById('cust-modal').classList.remove('open');
+}
+function filterCustModal(q) { renderCustModal(q); }
+
+function renderCustModal(q) {
+  const list = document.getElementById('cust-modal-list');
+  const custs = db.customers.filter(c => !c.isDeleted &&
+    (q === '' || (c.firstName + ' ' + c.lastName).toLowerCase().includes(q.toLowerCase()) ||
+     c.phone.includes(q))
+  );
+
+  list.innerHTML = `
+    <div class="cust-opt" onclick="selectCustomer(null)">
+      <div class="co-av walk">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div><div class="co-name">Walk-in customer</div><div class="co-phone">No customer record</div></div>
+    </div>
+    ${custs.map(c => `
+      <div class="cust-opt" onclick="selectCustomer(${c.id})">
+        <div class="co-av">${initials(c)}</div>
+        <div>
+          <div class="co-name">${c.firstName} ${c.lastName}</div>
+          <div class="co-phone">${c.phone}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function selectCustomer(id) {
+  saleCustomer = id ? db.customers.find(c => c.id === id) : null;
+  updateCustPill();
+  closeCustModal();
+}
+
+function updateCustPill() {
+  const av = document.getElementById('cust-av');
+  const name = document.getElementById('cust-name');
+  const phone = document.getElementById('cust-phone');
+  if (saleCustomer) {
+    av.className = 'cust-av';
+    av.textContent = initials(saleCustomer);
+    name.textContent = saleCustomer.firstName + ' ' + saleCustomer.lastName;
+    phone.textContent = saleCustomer.phone;
+  } else {
+    av.className = 'cust-av walk';
+    av.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    name.textContent = 'Walk-in customer';
+    phone.textContent = 'Select or search for a customer';
+  }
+}
+
+/* ───────────────────────────────────────────────
+   CUSTOMERS TABLE
+─────────────────────────────────────────────── */
+function renderCustomersTable(q = '') {
+  const rows = db.customers.filter(c => !c.isDeleted &&
+    (q === '' || (c.firstName + ' ' + c.lastName).toLowerCase().includes(q.toLowerCase()) ||
+     c.phone.includes(q) || c.email.toLowerCase().includes(q.toLowerCase()))
+  );
+  const count = document.getElementById('cust-count');
+  if (count) count.textContent = rows.length + ' records';
+  document.getElementById('tbody-cust').innerHTML = rows.map(c => `
+    <tr>
+      <td><strong>${c.firstName} ${c.lastName}</strong></td>
+      <td class="td2">${c.phone}</td>
+      <td class="td2">${c.email || '—'}</td>
+      <td class="td2" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.notes || '—'}</td>
+      <td><div class="td-act">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="openDrawer('customer',${c.id})" title="Edit">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a1.5 1.5 0 0 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/></svg>
+        </button>
+        <button class="btn btn-danger-ghost btn-icon btn-sm" onclick="deleteRecord('customer',${c.id})" title="Deactivate">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div></td>
+    </tr>
+  `).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">No customers found</td></tr>`;
+}
+
+/* ───────────────────────────────────────────────
+   ITEMS TABLE
+─────────────────────────────────────────────── */
+function renderItemsTable(q = '') {
+  const rows = db.items.filter(it =>
+    q === '' || it.description.toLowerCase().includes(q.toLowerCase()) ||
+    it.designNo.toLowerCase().includes(q.toLowerCase()) ||
+    it.category.toLowerCase().includes(q.toLowerCase())
+  );
+  const sup = id => (db.suppliers.find(s => s.id === id) || {}).name || '—';
+  document.getElementById('tbody-item').innerHTML = rows.map(it => `
+    <tr>
+      <td style="font-family:monospace;font-size:12px;color:var(--gold-dim)">${it.designNo}</td>
+      <td><strong>${it.description}</strong></td>
+      <td class="td2">${it.category}</td>
+      <td class="td2">${sup(it.supplierId)}</td>
+      <td style="text-align:right;font-weight:600">$${fmt(it.retailPrice)}</td>
+      <td style="text-align:right" class="td2">$${fmt(it.cost)}</td>
+      <td><span class="badge ${it.isActive ? 'badge-ok' : 'badge-err'}">${it.isActive ? 'Active' : 'Inactive'}</span></td>
+      <td><div class="td-act">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="openDrawer('item',${it.id})" title="Edit">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a1.5 1.5 0 0 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/></svg>
+        </button>
+      </div></td>
+    </tr>
+  `).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">No items found</td></tr>`;
+}
+
+/* ───────────────────────────────────────────────
+   INVENTORY TABLE
+─────────────────────────────────────────────── */
+function renderInventoryTable(q = '') {
+  const fq = q || document.getElementById('inv-search').value;
+  const fs = document.getElementById('inv-filter-status').value;
+  const rows = db.inventory.filter(inv =>
+    (fs === '' || inv.status === fs) &&
+    (fq === '' || inv.description.toLowerCase().includes(fq.toLowerCase()) ||
+     inv.designNo.toLowerCase().includes(fq.toLowerCase()))
+  );
+  const badgeCls = s => ({Active:'badge-ok',Sold:'badge-gold','On Hold':'badge-muted',Layby:'badge-warn'}[s] || 'badge-muted');
+  document.getElementById('tbody-inv').innerHTML = rows.map(inv => `
+    <tr>
+      <td style="font-family:monospace;font-size:12px;color:var(--gold-dim)">${inv.designNo}</td>
+      <td><strong>${inv.description}</strong></td>
+      <td class="td2">${inv.category}</td>
+      <td class="td2">${inv.store}</td>
+      <td><span class="badge ${badgeCls(inv.status)}">${inv.status}</span></td>
+      <td class="td2">${fmtDate(inv.acquired)}</td>
+      <td style="text-align:right;font-weight:600">$${fmt(inv.retailPrice)}</td>
+      <td><div class="td-act">
+        <button class="btn btn-ghost btn-icon btn-sm" title="View history" style="opacity:.5;cursor:default">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </button>
+      </div></td>
+    </tr>
+  `).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">No inventory items match</td></tr>`;
+}
+function filterInv() { renderInventoryTable(); }
+
+/* ───────────────────────────────────────────────
+   SUPPLIERS TABLE
+─────────────────────────────────────────────── */
+function renderSuppliersTable(q = '') {
+  const rows = db.suppliers.filter(s =>
+    q === '' || s.name.toLowerCase().includes(q.toLowerCase()) ||
+    s.contact.toLowerCase().includes(q.toLowerCase()) ||
+    s.email.toLowerCase().includes(q.toLowerCase())
+  );
+  document.getElementById('tbody-sup').innerHTML = rows.map(s => `
+    <tr>
+      <td><strong>${s.name}</strong></td>
+      <td class="td2">${s.contact}</td>
+      <td class="td2">${s.email}</td>
+      <td class="td2">${s.phone}</td>
+      <td><span class="badge ${s.isActive ? 'badge-ok' : 'badge-muted'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
+      <td><div class="td-act">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="openDrawer('supplier',${s.id})" title="Edit">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a1.5 1.5 0 0 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/></svg>
+        </button>
+        <button class="btn btn-danger-ghost btn-icon btn-sm" onclick="deleteRecord('supplier',${s.id})" title="Deactivate">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div></td>
+    </tr>
+  `).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">No suppliers found</td></tr>`;
+}
+
+/* ───────────────────────────────────────────────
+   GENERIC TABLE FILTER
+─────────────────────────────────────────────── */
+function filterTable(type, q) {
+  if (type === 'cust') renderCustomersTable(q);
+  else if (type === 'item') renderItemsTable(q);
+  else if (type === 'sup') renderSuppliersTable(q);
+}
+
+/* ───────────────────────────────────────────────
+   DRAWER — FORMS
+─────────────────────────────────────────────── */
+function openDrawer(entity, id) {
+  drawerEntity = entity;
+  drawerRecord = null;
+  let title = 'Add';
+  let html = '';
+
+  if (entity === 'customer') {
+    const c = id ? db.customers.find(x => x.id === id) : null;
+    drawerRecord = c;
+    title = c ? 'Edit Customer' : 'New Customer';
+    html = `
+      <div class="fg-row">
+        <div class="fg"><label class="fl">First Name</label><input class="fi" id="df-firstName" value="${c?.firstName||''}" placeholder="Jane"></div>
+        <div class="fg"><label class="fl">Last Name</label><input class="fi" id="df-lastName" value="${c?.lastName||''}" placeholder="Smith"></div>
+      </div>
+      <div class="fg"><label class="fl">Phone</label><input class="fi" id="df-phone" value="${c?.phone||''}" placeholder="0412 000 000"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="df-email" type="email" value="${c?.email||''}" placeholder="jane@example.com"></div>
+      <div class="fg"><label class="fl">Notes</label><textarea class="fi" id="df-notes" rows="3" style="resize:vertical">${c?.notes||''}</textarea></div>
+    `;
+  } else if (entity === 'item') {
+    const it = id ? db.items.find(x => x.id === id) : null;
+    drawerRecord = it;
+    title = it ? 'Edit Item' : 'New Item';
+    const supOpts = db.suppliers.filter(s => s.isActive).map(s =>
+      `<option value="${s.id}" ${it?.supplierId===s.id?'selected':''}>${s.name}</option>`
+    ).join('');
+    const cats = ['Rings','Earrings','Necklaces','Bracelets','Pendants','Watches','Other'];
+    const catOpts = cats.map(c => `<option ${it?.category===c?'selected':''}>${c}</option>`).join('');
+    html = `
+      <div class="fg-row">
+        <div class="fg"><label class="fl">Design No.</label><input class="fi" id="df-designNo" value="${it?.designNo||''}" placeholder="ABC-001"></div>
+        <div class="fg"><label class="fl">Category</label><select class="fs" id="df-category"><option value="">Select…</option>${catOpts}</select></div>
+      </div>
+      <div class="fg"><label class="fl">Description</label><input class="fi" id="df-description" value="${it?.description||''}" placeholder="e.g. Diamond Solitaire Ring"></div>
+      <div class="fg"><label class="fl">Supplier</label><select class="fs" id="df-supplierId"><option value="">Select supplier…</option>${supOpts}</select></div>
+      <span class="fsec">Pricing</span>
+      <div class="fg-row">
+        <div class="fg"><label class="fl">Retail Price</label><input class="fi" id="df-retailPrice" type="number" min="0" step="0.01" value="${it?.retailPrice||''}" placeholder="0.00"></div>
+        <div class="fg"><label class="fl">Cost Price</label><input class="fi" id="df-cost" type="number" min="0" step="0.01" value="${it?.cost||''}" placeholder="0.00"></div>
+      </div>
+      <div class="fg"><label class="fl" style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px">
+        <input type="checkbox" id="df-isActive" ${it?.isActive!==false?'checked':''} style="width:16px;height:16px;accent-color:var(--gold)"> Active (available in inventory)
+      </label></div>
+    `;
+  } else if (entity === 'supplier') {
+    const s = id ? db.suppliers.find(x => x.id === id) : null;
+    drawerRecord = s;
+    title = s ? 'Edit Supplier' : 'New Supplier';
+    html = `
+      <div class="fg"><label class="fl">Supplier Name</label><input class="fi" id="df-name" value="${s?.name||''}" placeholder="e.g. Pandora Wholesale"></div>
+      <div class="fg-row">
+        <div class="fg"><label class="fl">Contact Person</label><input class="fi" id="df-contact" value="${s?.contact||''}" placeholder="Alex Chen"></div>
+        <div class="fg"><label class="fl">Phone</label><input class="fi" id="df-phone" value="${s?.phone||''}" placeholder="02 9000 0000"></div>
+      </div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="df-email" type="email" value="${s?.email||''}" placeholder="orders@supplier.com"></div>
+      <div class="fg" style="margin-top:8px"><label class="fl" style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px">
+        <input type="checkbox" id="df-isActive" ${s?.isActive!==false?'checked':''} style="width:16px;height:16px;accent-color:var(--gold)"> Active
+      </label></div>
+    `;
+  }
+
+  document.getElementById('dr-title').textContent = title;
+  document.getElementById('dr-body').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+
+function saveDrawer() {
+  if (drawerEntity === 'customer') {
+    const data = {
+      firstName: val('df-firstName'),
+      lastName:  val('df-lastName'),
+      phone:     val('df-phone'),
+      email:     val('df-email'),
+      notes:     val('df-notes'),
+      isDeleted: false,
+    };
+    if (drawerRecord) {
+      Object.assign(drawerRecord, data);
+    } else {
+      db.customers.push({id: Date.now(), ...data});
+    }
+    renderCustomersTable();
+
+  } else if (drawerEntity === 'item') {
+    const data = {
+      designNo:    val('df-designNo'),
+      description: val('df-description'),
+      category:    val('df-category'),
+      supplierId:  parseInt(val('df-supplierId')) || null,
+      retailPrice: parseFloat(val('df-retailPrice')) || 0,
+      cost:        parseFloat(val('df-cost')) || 0,
+      isActive:    document.getElementById('df-isActive').checked,
+    };
+    if (drawerRecord) {
+      Object.assign(drawerRecord, data);
+    } else {
+      db.items.push({id: Date.now(), ...data});
+    }
+    renderItemsTable();
+
+  } else if (drawerEntity === 'supplier') {
+    const data = {
+      name:     val('df-name'),
+      contact:  val('df-contact'),
+      phone:    val('df-phone'),
+      email:    val('df-email'),
+      isActive: document.getElementById('df-isActive').checked,
+    };
+    if (drawerRecord) {
+      Object.assign(drawerRecord, data);
+    } else {
+      db.suppliers.push({id: Date.now(), ...data});
+    }
+    renderSuppliersTable();
+  }
+
+  closeDrawer();
+  showToast('Saved successfully');
+}
+
+function deleteRecord(type, id) {
+  if (type === 'customer') {
+    const c = db.customers.find(x => x.id === id);
+    if (c && confirm(`Remove ${c.firstName} ${c.lastName}?`)) {
+      c.isDeleted = true;
+      renderCustomersTable();
+      showToast('Customer removed');
+    }
+  } else if (type === 'supplier') {
+    const s = db.suppliers.find(x => x.id === id);
+    if (s && confirm(`Deactivate ${s.name}?`)) {
+      s.isActive = false;
+      renderSuppliersTable();
+      showToast('Supplier deactivated');
+    }
+  }
+}
+
+/* ───────────────────────────────────────────────
+   TOAST
+─────────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+/* ───────────────────────────────────────────────
+   HELPERS
+─────────────────────────────────────────────── */
+function fmt(n) { return Number(n).toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(s) { return s ? new Date(s).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—'; }
+function initials(c) { return ((c.firstName||'')[0]||'').toUpperCase() + ((c.lastName||'')[0]||'').toUpperCase(); }
+function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+</script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaPOS — UI Concepts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; }
+    body { background: #111; overflow: hidden; }
+    .screen { display: none; height: calc(100vh - 44px); flex-direction: column; }
+    .screen.active { display: flex; }
+    input { font-family: inherit; }
+    button { font-family: inherit; cursor: pointer; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 3px; }
+    input:focus { outline: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Tab bar ─────────────────────────────────────────────────────── -->
+<nav style="position:fixed;top:0;left:0;right:0;z-index:200;height:44px;background:#0a0a0a;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;padding:0 20px;gap:6px;">
+  <span style="font-size:11px;font-weight:600;color:#555;letter-spacing:0.08em;text-transform:uppercase;margin-right:14px;">NovaPOS Concepts</span>
+  <button id="btn-d1" onclick="show('d1')" style="padding:4px 16px;border-radius:20px;border:none;font-size:12px;font-weight:500;background:#D4A843;color:#111;">1 · Dark Luxe</button>
+  <button id="btn-d2" onclick="show('d2')" style="padding:4px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-size:12px;font-weight:500;color:#777;">2 · Clean Modern</button>
+  <button id="btn-d3" onclick="show('d3')" style="padding:4px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:transparent;font-size:12px;font-weight:500;color:#777;">3 · Warm Boutique</button>
+  <span style="margin-left:auto;font-size:11px;color:#444;">Visual concept only — not interactive</span>
+</nav>
+
+<div style="margin-top:44px;height:calc(100vh - 44px);position:relative;">
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     DESIGN 1 — DARK LUXE
+     Moment: Payment in progress · two items in cart · cash entered
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="d1" class="screen active" style="background:#0D1117;color:#E6EDF3;">
+
+  <!-- Header -->
+  <header style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:#0D1117;border-bottom:1px solid rgba(255,255,255,0.07);">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-size:16px;font-weight:700;color:#D4A843;letter-spacing:-0.3px;">◆ NovaPOS</span>
+      <span style="width:1px;height:16px;background:rgba(255,255,255,0.1);display:inline-block;"></span>
+      <span style="font-size:12px;color:#484F58;">City Store</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <!-- Customer pill -->
+      <div style="display:flex;align-items:center;gap:9px;background:rgba(212,168,67,0.07);border:1px solid rgba(212,168,67,0.18);border-radius:8px;padding:5px 12px 5px 7px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#D4A843;color:#0D1117;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">JS</div>
+        <div>
+          <div style="font-size:12px;font-weight:500;color:#E6EDF3;line-height:1.2;">Jane Smith</div>
+          <div style="font-size:10px;color:#6E7681;line-height:1.2;">0412 000 000</div>
+        </div>
+        <i class="ti ti-chevron-down" aria-hidden="true" style="font-size:13px;color:#6E7681;margin-left:3px;"></i>
+      </div>
+      <!-- Sale meta -->
+      <div style="text-align:right;">
+        <div style="font-size:12px;color:#D4A843;font-weight:600;letter-spacing:-0.2px;">Sale #0042</div>
+        <div style="font-size:10px;color:#484F58;">Sat 13 Jun 2026 · 10:32 AM</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <!-- Left — search + sale lines -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:14px 16px;gap:11px;">
+
+      <!-- Search bar -->
+      <div style="position:relative;">
+        <i class="ti ti-search" aria-hidden="true" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:#484F58;pointer-events:none;"></i>
+        <input type="text" placeholder="Search by description, design no., or scan barcode…"
+          style="width:100%;background:#161B22;border:1px solid rgba(255,255,255,0.09);border-radius:9px;padding:10px 13px 10px 38px;color:#E6EDF3;font-size:13px;">
+      </div>
+
+      <!-- Column headings -->
+      <div style="display:grid;grid-template-columns:22px 1fr 104px 104px 30px;gap:8px;padding:0 10px;font-size:10px;font-weight:600;color:#3B4048;letter-spacing:0.08em;text-transform:uppercase;">
+        <span>#</span><span>Description</span>
+        <span style="text-align:right;">Unit price</span>
+        <span style="text-align:right;">Total</span>
+        <span></span>
+      </div>
+
+      <!-- Sale lines -->
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;">
+
+        <div style="display:grid;grid-template-columns:22px 1fr 104px 104px 30px;gap:8px;align-items:center;background:#161B22;border:1px solid rgba(255,255,255,0.06);border-radius:9px;padding:11px 10px;">
+          <span style="font-size:11px;color:#484F58;">1</span>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#E6EDF3;">Diamond Solitaire Ring</div>
+            <div style="font-size:10px;color:#484F58;margin-top:2px;">PAN-001 · 18ct Yellow Gold · Ring</div>
+          </div>
+          <div style="text-align:right;font-size:13px;color:#A08840;">$1,299.00</div>
+          <div style="text-align:right;font-size:13px;font-weight:600;color:#E6EDF3;">$1,299.00</div>
+          <button aria-label="Remove" style="width:26px;height:26px;border-radius:6px;background:rgba(248,81,73,0.1);border:none;color:#F85149;display:flex;align-items:center;justify-content:center;">
+            <i class="ti ti-x" style="font-size:13px;" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:22px 1fr 104px 104px 30px;gap:8px;align-items:center;background:#161B22;border:1px solid rgba(255,255,255,0.06);border-radius:9px;padding:11px 10px;">
+          <span style="font-size:11px;color:#484F58;">2</span>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#E6EDF3;">Diamond Drop Earrings</div>
+            <div style="font-size:10px;color:#484F58;margin-top:2px;">MAP-024 · 18ct White Gold · Earrings</div>
+          </div>
+          <div style="text-align:right;font-size:13px;color:#A08840;">$1,299.00</div>
+          <div style="text-align:right;font-size:13px;font-weight:600;color:#E6EDF3;">$1,299.00</div>
+          <button aria-label="Remove" style="width:26px;height:26px;border-radius:6px;background:rgba(248,81,73,0.1);border:none;color:#F85149;display:flex;align-items:center;justify-content:center;">
+            <i class="ti ti-x" style="font-size:13px;" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div style="border:1px dashed rgba(255,255,255,0.07);border-radius:9px;padding:16px;text-align:center;color:#3B4048;font-size:12px;">
+          <i class="ti ti-plus" aria-hidden="true" style="font-size:14px;display:block;margin-bottom:4px;"></i>
+          Search above to add more items
+        </div>
+      </div>
+    </div>
+
+    <!-- Right — totals + tender + actions -->
+    <div style="width:288px;flex-shrink:0;background:#0A0E13;border-left:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;padding:18px 16px;">
+
+      <!-- Totals -->
+      <div style="padding-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.07);">
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+          <span style="font-size:12px;color:#484F58;">Subtotal</span>
+          <span style="font-size:12px;color:#6E7681;">$2,598.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+          <span style="font-size:12px;color:#484F58;">Discount</span>
+          <span style="font-size:12px;color:#3B4048;">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-size:14px;font-weight:500;color:#E6EDF3;">Total</span>
+          <span style="font-size:26px;font-weight:700;color:#D4A843;letter-spacing:-1px;">$2,598.00</span>
+        </div>
+      </div>
+
+      <!-- Tender -->
+      <div style="padding:15px 0;border-bottom:1px solid rgba(255,255,255,0.07);flex:1;">
+        <label style="font-size:10px;font-weight:600;color:#3B4048;text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;">Cash Tendered</label>
+        <div style="position:relative;margin-bottom:11px;">
+          <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#6E7681;font-size:15px;font-weight:500;">$</span>
+          <input type="text" value="3,000.00"
+            style="width:100%;background:#0D1117;border:1.5px solid rgba(212,168,67,0.35);border-radius:8px;padding:10px 12px 10px 27px;color:#E6EDF3;font-size:22px;font-weight:700;text-align:right;letter-spacing:-0.5px;">
+        </div>
+        <div style="background:rgba(63,185,80,0.07);border:1px solid rgba(63,185,80,0.2);border-radius:9px;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#484F58;">Change due</span>
+          <span style="font-size:26px;font-weight:700;color:#3FB950;letter-spacing:-1px;">$402.00</span>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="padding-top:15px;display:flex;flex-direction:column;gap:8px;">
+        <button style="width:100%;background:#D4A843;color:#0D1117;border:none;border-radius:9px;padding:13px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px;">
+          <i class="ti ti-check" aria-hidden="true"></i> Complete Sale
+        </button>
+        <button style="width:100%;background:transparent;color:#484F58;border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:9px;font-size:12px;font-weight:500;">
+          Clear Sale
+        </button>
+      </div>
+    </div>
+  </div>
+</div><!-- /d1 -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     DESIGN 2 — CLEAN MODERN
+     Moment: Search dropdown open · staff selecting an item to add
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="d2" class="screen" style="background:#F1F5F9;color:#0F172A;">
+
+  <!-- Header -->
+  <header style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:#fff;border-bottom:1px solid #E2E8F0;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-size:16px;font-weight:700;color:#4F46E5;letter-spacing:-0.3px;">NovaPOS</span>
+      <span style="width:1px;height:16px;background:#E2E8F0;display:inline-block;"></span>
+      <span style="font-size:12px;color:#94A3B8;">City Store</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <!-- Walk-in badge -->
+      <div style="display:flex;align-items:center;gap:8px;border:1px dashed #CBD5E1;border-radius:8px;padding:5px 12px 5px 9px;background:#F8FAFC;cursor:pointer;">
+        <i class="ti ti-user" aria-hidden="true" style="font-size:15px;color:#94A3B8;"></i>
+        <span style="font-size:12px;color:#64748B;">Walk-in customer</span>
+        <i class="ti ti-chevron-down" aria-hidden="true" style="font-size:13px;color:#CBD5E1;margin-left:2px;"></i>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;color:#4F46E5;font-weight:600;letter-spacing:-0.2px;">Sale #0043</div>
+        <div style="font-size:10px;color:#94A3B8;">Sat 13 Jun 2026 · 11:05 AM</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <!-- Left -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:14px 16px;gap:11px;">
+
+      <!-- Search with open dropdown -->
+      <div style="position:relative;z-index:50;">
+        <div style="position:relative;">
+          <i class="ti ti-search" aria-hidden="true" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:#4F46E5;pointer-events:none;z-index:1;"></i>
+          <input type="text" value="diamond ring"
+            style="width:100%;background:#fff;border:2px solid #4F46E5;border-radius:9px 9px 0 0;padding:10px 13px 10px 38px;color:#0F172A;font-size:13px;">
+        </div>
+        <!-- Dropdown -->
+        <div style="background:#fff;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 10px 10px;box-shadow:0 10px 30px rgba(0,0,0,0.08);overflow:hidden;">
+          <!-- Header row -->
+          <div style="display:grid;grid-template-columns:40px 1fr 90px 70px;gap:8px;padding:7px 13px;background:#F8FAFC;font-size:10px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.07em;">
+            <span></span><span>Item</span><span style="text-align:right;">Price</span><span style="text-align:right;">Stock</span>
+          </div>
+          <!-- Result 1 — highlighted -->
+          <div style="display:grid;grid-template-columns:40px 1fr 90px 70px;gap:8px;padding:9px 13px;align-items:center;background:#F5F3FF;border-bottom:1px solid #EEF2FF;cursor:pointer;">
+            <div style="width:34px;height:34px;border-radius:8px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;">
+              <i class="ti ti-diamond" aria-hidden="true" style="font-size:16px;color:#4F46E5;"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#0F172A;">Diamond Solitaire Ring</div>
+              <div style="font-size:11px;color:#94A3B8;margin-top:1px;">PAN-001 · 18ct Yellow Gold · Ring</div>
+            </div>
+            <div style="text-align:right;font-size:13px;font-weight:600;color:#4F46E5;">$1,299</div>
+            <div style="text-align:right;">
+              <span style="font-size:11px;background:#ECFDF5;color:#059669;padding:2px 7px;border-radius:20px;font-weight:500;">1 avail.</span>
+            </div>
+          </div>
+          <!-- Result 2 -->
+          <div style="display:grid;grid-template-columns:40px 1fr 90px 70px;gap:8px;padding:9px 13px;align-items:center;background:#fff;border-bottom:1px solid #F1F5F9;cursor:pointer;">
+            <div style="width:34px;height:34px;border-radius:8px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;">
+              <i class="ti ti-diamond" aria-hidden="true" style="font-size:16px;color:#CBD5E1;"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#0F172A;">Diamond Halo Ring</div>
+              <div style="font-size:11px;color:#94A3B8;margin-top:1px;">TIF-089 · 18ct Rose Gold · Ring</div>
+            </div>
+            <div style="text-align:right;font-size:13px;font-weight:600;color:#0F172A;">$2,499</div>
+            <div style="text-align:right;">
+              <span style="font-size:11px;background:#ECFDF5;color:#059669;padding:2px 7px;border-radius:20px;font-weight:500;">1 avail.</span>
+            </div>
+          </div>
+          <!-- Result 3 -->
+          <div style="display:grid;grid-template-columns:40px 1fr 90px 70px;gap:8px;padding:9px 13px;align-items:center;background:#fff;cursor:pointer;">
+            <div style="width:34px;height:34px;border-radius:8px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;">
+              <i class="ti ti-diamond" aria-hidden="true" style="font-size:16px;color:#CBD5E1;"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#0F172A;">Diamond Eternity Band</div>
+              <div style="font-size:11px;color:#94A3B8;margin-top:1px;">CAR-112 · Platinum · Ring</div>
+            </div>
+            <div style="text-align:right;font-size:13px;font-weight:600;color:#0F172A;">$3,200</div>
+            <div style="text-align:right;">
+              <span style="font-size:11px;background:#ECFDF5;color:#059669;padding:2px 7px;border-radius:20px;font-weight:500;">2 avail.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column headings -->
+      <div style="display:grid;grid-template-columns:22px 1fr 104px 104px 30px;gap:8px;padding:0 12px;font-size:10px;font-weight:600;color:#CBD5E1;letter-spacing:0.08em;text-transform:uppercase;">
+        <span>#</span><span>Description</span>
+        <span style="text-align:right;">Unit price</span>
+        <span style="text-align:right;">Total</span>
+        <span></span>
+      </div>
+
+      <!-- Sale lines -->
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;">
+        <div style="display:grid;grid-template-columns:22px 1fr 104px 104px 30px;gap:8px;align-items:center;background:#fff;border:1px solid #E2E8F0;border-radius:9px;padding:11px 12px;">
+          <span style="font-size:11px;color:#CBD5E1;">1</span>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#0F172A;">Diamond Drop Earrings</div>
+            <div style="font-size:10px;color:#94A3B8;margin-top:2px;">MAP-024 · 18ct White Gold · Earrings</div>
+          </div>
+          <div style="text-align:right;font-size:13px;color:#64748B;">$1,299.00</div>
+          <div style="text-align:right;font-size:13px;font-weight:600;color:#0F172A;">$1,299.00</div>
+          <button aria-label="Remove" style="width:26px;height:26px;border-radius:6px;background:#FFF1F2;border:none;color:#EF4444;display:flex;align-items:center;justify-content:center;">
+            <i class="ti ti-x" style="font-size:13px;" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div style="border:2px dashed #E2E8F0;border-radius:9px;padding:16px;text-align:center;color:#CBD5E1;font-size:12px;">
+          <i class="ti ti-plus" aria-hidden="true" style="font-size:14px;display:block;margin-bottom:4px;"></i>
+          Click a result above to add to sale
+        </div>
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div style="width:288px;flex-shrink:0;background:#fff;border-left:1px solid #E2E8F0;display:flex;flex-direction:column;padding:18px 16px;">
+
+      <div style="padding-bottom:15px;border-bottom:1px solid #F1F5F9;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+          <span style="font-size:12px;color:#94A3B8;">Subtotal</span>
+          <span style="font-size:12px;color:#64748B;">$1,299.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+          <span style="font-size:12px;color:#94A3B8;">Discount</span>
+          <span style="font-size:12px;color:#CBD5E1;">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-size:14px;font-weight:500;color:#0F172A;">Total</span>
+          <span style="font-size:26px;font-weight:700;color:#4F46E5;letter-spacing:-1px;">$1,299.00</span>
+        </div>
+      </div>
+
+      <div style="padding:15px 0;border-bottom:1px solid #F1F5F9;flex:1;">
+        <label style="font-size:10px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;">Cash Tendered</label>
+        <div style="position:relative;margin-bottom:11px;">
+          <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#94A3B8;font-size:15px;">$</span>
+          <input type="text" placeholder="0.00"
+            style="width:100%;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:8px;padding:10px 12px 10px 27px;color:#0F172A;font-size:22px;font-weight:700;text-align:right;letter-spacing:-0.5px;">
+        </div>
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#94A3B8;">Change due</span>
+          <span style="font-size:20px;font-weight:600;color:#CBD5E1;">—</span>
+        </div>
+      </div>
+
+      <div style="padding-top:15px;display:flex;flex-direction:column;gap:8px;">
+        <button style="width:100%;background:#4F46E5;color:#fff;border:none;border-radius:9px;padding:13px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;opacity:0.45;">
+          <i class="ti ti-check" aria-hidden="true"></i> Complete Sale
+        </button>
+        <button style="width:100%;background:transparent;color:#94A3B8;border:1px solid #E2E8F0;border-radius:9px;padding:9px;font-size:12px;font-weight:500;">
+          Clear Sale
+        </button>
+      </div>
+    </div>
+  </div>
+</div><!-- /d2 -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     DESIGN 3 — WARM BOUTIQUE
+     Moment: Two items added · customer card shows purchase history
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="d3" class="screen" style="background:#FAF7F2;color:#1C1917;">
+
+  <!-- Header -->
+  <header style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:#fff;border-bottom:1px solid #EDE9E3;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-size:16px;font-weight:700;color:#78350F;letter-spacing:-0.3px;">NovaPOS</span>
+      <span style="width:1px;height:16px;background:#EDE9E3;display:inline-block;"></span>
+      <span style="font-size:12px;color:#A8A29E;">City Store</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <!-- Customer pill -->
+      <div style="display:flex;align-items:center;gap:9px;border:1px solid #EDE9E3;border-radius:8px;padding:5px 12px 5px 7px;background:#fff;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#FEF3C7;color:#92400E;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">JS</div>
+        <div>
+          <div style="font-size:12px;font-weight:500;color:#1C1917;line-height:1.2;">Jane Smith</div>
+          <div style="font-size:10px;color:#A8A29E;line-height:1.2;">0412 000 000</div>
+        </div>
+        <i class="ti ti-chevron-down" aria-hidden="true" style="font-size:13px;color:#A8A29E;margin-left:3px;"></i>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;color:#92400E;font-weight:600;letter-spacing:-0.2px;">Sale #0042</div>
+        <div style="font-size:10px;color:#A8A29E;">Sat 13 Jun 2026 · 10:32 AM</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <!-- Left -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:14px 16px;gap:11px;">
+
+      <!-- Search -->
+      <div style="position:relative;">
+        <i class="ti ti-search" aria-hidden="true" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:#A8A29E;pointer-events:none;"></i>
+        <input type="text" placeholder="Search by description, design no., or scan barcode…"
+          style="width:100%;background:#fff;border:1.5px solid #EDE9E3;border-radius:9px;padding:10px 13px 10px 38px;color:#1C1917;font-size:13px;">
+      </div>
+
+      <!-- Column headings -->
+      <div style="display:grid;grid-template-columns:22px 1fr 104px 104px 30px;gap:8px;padding:0 12px;font-size:10px;font-weight:600;color:#C4BAB0;letter-spacing:0.08em;text-transform:uppercase;">
+        <span>#</span><span>Description</span>
+        <span style="text-align:right;">Unit price</span>
+        <span style="text-align:right;">Total</span>
+        <span></span>
+      </div>
+
+      <!-- Sale lines -->
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;">
+
+        <div style="display:grid;grid-template-columns:22px 1fr 104px 104px 30px;gap:8px;align-items:center;background:#fff;border:1px solid #EDE9E3;border-radius:9px;padding:11px 12px;">
+          <span style="font-size:11px;color:#C4BAB0;">1</span>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#1C1917;">Diamond Solitaire Ring</div>
+            <div style="font-size:10px;color:#A8A29E;margin-top:2px;">PAN-001 · 18ct Yellow Gold · Ring</div>
+          </div>
+          <div style="text-align:right;font-size:13px;color:#A8A29E;">$1,299.00</div>
+          <div style="text-align:right;font-size:13px;font-weight:600;color:#1C1917;">$1,299.00</div>
+          <button aria-label="Remove" style="width:26px;height:26px;border-radius:6px;background:#FFF1F2;border:none;color:#F87171;display:flex;align-items:center;justify-content:center;">
+            <i class="ti ti-x" style="font-size:13px;" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:22px 1fr 104px 104px 30px;gap:8px;align-items:center;background:#fff;border:1px solid #EDE9E3;border-radius:9px;padding:11px 12px;">
+          <span style="font-size:11px;color:#C4BAB0;">2</span>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#1C1917;">Diamond Drop Earrings</div>
+            <div style="font-size:10px;color:#A8A29E;margin-top:2px;">MAP-024 · 18ct White Gold · Earrings</div>
+          </div>
+          <div style="text-align:right;font-size:13px;color:#A8A29E;">$1,299.00</div>
+          <div style="text-align:right;font-size:13px;font-weight:600;color:#1C1917;">$1,299.00</div>
+          <button aria-label="Remove" style="width:26px;height:26px;border-radius:6px;background:#FFF1F2;border:none;color:#F87171;display:flex;align-items:center;justify-content:center;">
+            <i class="ti ti-x" style="font-size:13px;" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div style="border:1.5px dashed #EDE9E3;border-radius:9px;padding:16px;text-align:center;color:#C4BAB0;font-size:12px;">
+          <i class="ti ti-plus" aria-hidden="true" style="font-size:14px;display:block;margin-bottom:4px;"></i>
+          Search above to add more items
+        </div>
+      </div>
+    </div>
+
+    <!-- Right — with customer history card -->
+    <div style="width:288px;flex-shrink:0;background:#fff;border-left:1px solid #EDE9E3;display:flex;flex-direction:column;padding:16px;">
+
+      <!-- Customer history card -->
+      <div style="background:#FFFBF5;border:1px solid #EDE9E3;border-radius:10px;padding:12px;margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:600;color:#A8A29E;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:9px;">Customer history</div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+          <div style="width:34px;height:34px;border-radius:50%;background:#FEF3C7;color:#92400E;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">JS</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#1C1917;">Jane Smith</div>
+            <div style="font-size:11px;color:#A8A29E;">jane@example.com</div>
+          </div>
+        </div>
+        <div style="border-top:1px solid #EDE9E3;padding-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div>
+            <div style="font-size:10px;color:#A8A29E;margin-bottom:2px;">Spent</div>
+            <div style="font-size:13px;font-weight:600;color:#78350F;">$14,820</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#A8A29E;margin-bottom:2px;">Visits</div>
+            <div style="font-size:13px;font-weight:600;color:#1C1917;">18</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#A8A29E;margin-bottom:2px;">Last in</div>
+            <div style="font-size:13px;font-weight:600;color:#1C1917;">Mar '26</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Totals -->
+      <div style="padding-bottom:14px;border-bottom:1px solid #F5F0E8;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:12px;color:#A8A29E;">Subtotal</span>
+          <span style="font-size:12px;color:#78716C;">$2,598.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:13px;">
+          <span style="font-size:12px;color:#A8A29E;">Discount</span>
+          <span style="font-size:12px;color:#C4BAB0;">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-size:14px;font-weight:500;color:#1C1917;">Total</span>
+          <span style="font-size:26px;font-weight:700;color:#78350F;letter-spacing:-1px;">$2,598.00</span>
+        </div>
+      </div>
+
+      <!-- Tender -->
+      <div style="padding:14px 0;border-bottom:1px solid #F5F0E8;flex:1;">
+        <label style="font-size:10px;font-weight:600;color:#A8A29E;text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;">Cash Tendered</label>
+        <div style="position:relative;margin-bottom:11px;">
+          <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#A8A29E;font-size:15px;">$</span>
+          <input type="text" value="3,000.00"
+            style="width:100%;background:#FFFBF5;border:1.5px solid #D6C9B8;border-radius:8px;padding:10px 12px 10px 27px;color:#1C1917;font-size:22px;font-weight:700;text-align:right;letter-spacing:-0.5px;">
+        </div>
+        <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:9px;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#A8A29E;">Change due</span>
+          <span style="font-size:26px;font-weight:700;color:#16A34A;letter-spacing:-1px;">$402.00</span>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="padding-top:14px;display:flex;flex-direction:column;gap:8px;">
+        <button style="width:100%;background:#78350F;color:#FEF3C7;border:none;border-radius:9px;padding:13px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;">
+          <i class="ti ti-check" aria-hidden="true"></i> Complete Sale
+        </button>
+        <button style="width:100%;background:transparent;color:#A8A29E;border:1px solid #EDE9E3;border-radius:9px;padding:9px;font-size:12px;font-weight:500;">
+          Clear Sale
+        </button>
+      </div>
+    </div>
+  </div>
+</div><!-- /d3 -->
+
+</div><!-- /margin wrapper -->
+
+<script>
+  function show(id) {
+    ['d1','d2','d3'].forEach(function(d) {
+      document.getElementById(d).classList.remove('active');
+      var b = document.getElementById('btn-' + d);
+      b.style.background = 'transparent';
+      b.style.color = '#777';
+      b.style.border = '1px solid rgba(255,255,255,0.15)';
+    });
+    document.getElementById(id).classList.add('active');
+    var active = document.getElementById('btn-' + id);
+    active.style.border = 'none';
+    if (id === 'd1') { active.style.background = '#D4A843'; active.style.color = '#111'; }
+    if (id === 'd2') { active.style.background = '#EEF2FF'; active.style.color = '#4F46E5'; }
+    if (id === 'd3') { active.style.background = '#FEF3C7'; active.style.color = '#78350F'; }
+  }
+</script>
+</body>
+</html>
