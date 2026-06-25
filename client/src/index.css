@@ -45,7 +45,7 @@ input:focus, select:focus, textarea:focus { outline: none; }
 }
 .brand-mark { color: var(--gold); font-size: 18px; flex-shrink: 0; width: 32px; text-align: center; line-height: 1; }
 .brand-text { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; white-space: nowrap; transition: opacity var(--st); }
-.sidebar.col .brand-text { opacity: 0; pointer-events: none; }
+.sidebar.col .brand-text { display: none; }
 .sidebar.col .brand-mark { display: none; }
 .sidebar.col .sb-top { justify-content: center; padding: 0; }
 .toggle-btn {
